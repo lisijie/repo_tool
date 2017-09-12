@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>项目分支切换助手</title>
+    <link href="//apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+    <link href="//apps.bdimg.com/libs/fontawesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
+</head>
+<body style="background: #f0f0f0">
+<div class="container" style="background: #fff; margin-top: 20px;">
+    <h3>项目列表</h3>
+    <hr/>
+    <div class="form-horizontal" id="projects"></div>
+    <h3>执行命令</h3>
+    <hr/>
+    <div id="commands"></div>
+    <hr/>
+    <h5>控制台输出： </h5>
+    <div id="output"
+         style="width: 98%; height: 300px; padding: 5px; margin: 10px 0; border-radius:4px 4px 0 0; overflow: scroll; border: 1px solid #000; background: #3d3d3d; color: #f0f0f0"></div>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script>
+        $(function () {
+            var projects, commands;
+            $.getJSON('/status', function (out) {
+                projects = out.data['projects'];
+                commands = out.data['commands'];
+                for (var v in projects) {
+                    var info = projects[v];
+                    var html = '<div class="form-group" id="project-' + info.name + '">';
+                    html += '<label class="col-sm-2 control-label">' + info.name + '</label>';
+                    html += '<div class="col-sm-5">';
+                    html += '<select name="branch" class="form-control">';
+                    for (var i = 0; i < info.branches.length; i++) {
+                        var chk = info.branches[i] == info.current ? ' selected' : '';
+                        html += '<option value="' + info.branches[i] + '" ' + chk + '>' + info.branches[i] + '</option>';
+                    }
+                    html += '</select>';
+                    html += '</div>';
+                    html += '<div class="col-sm-3">' +
+                        '<button data-project="' + info.name + '" data-action="pull" class="btn btn-primary">更新代码</button> &nbsp;' +
+                        '<button data-project="' + info.name + '" data-action="checkout" class="btn btn-success">切换分支</button>' +
+                        '</div>';
+                    html += '</div>';
+
+                    $('#projects').append(html);
+                }
+                for (var v in commands) {
+                    var html = '<button data-action="' + v + '" class="btn btn-primary">' + v + '</button>' + "\n";
+                    $('#commands').append(html);
+                }
+                bind_events();
+            });
+            function bind_events() {
+                $('button').unbind('click');
+                $('button').click(function () {
+                    var project = $(this).data("project");
+                    var action = $(this).data("action");
+                    var btnObj = $(this);
+                    var btnText = $(this).text();
+                    btnObj.html('<i class="fa fa-refresh fa-spin"></i> ' + btnText);
+                    var url = "", cmd = "";
+                    switch (action) {
+                        case 'pull':
+                            url = "/pull?p=" + project;
+                            cmd = "git pull";
+                            break;
+                        case 'checkout':
+                            var branch = $('#project-' + project).find('select[name="branch"]').val();
+                            url = "/checkout?p=" + project + "&branch=" + branch;
+                            cmd = "git checkout " + branch;
+                            break;
+                        default: // command
+                            cmd = commands[action];
+                            url = "/command?name=" + action;
+                            break;
+                    }
+                    if (!url) {
+                        return;
+                    }
+                    $('#output').append("$ " + cmd + "<br />");
+                    $.getJSON(url, function (out) {
+                        btnObj.html(btnText);
+                        var sArr = out.code == 0 ? out.data.out.split("\n") : out.msg.split("\n");
+                        for (var i = 0; i < sArr.length; i++) {
+                            if (sArr[i]) {
+                                var line = sArr[i]
+                                if (out.code != 0) {
+                                    line = '<span class="text-danger">' + line + '</span>';
+                                }
+                                $('#output').append("$ " + line + "<br />");
+                                var h = document.getElementById('output').scrollHeight;
+                                $('#output').animate({scrollTop: h}, 10);
+                            }
+                        }
+
+                    })
+                });
+            }
+        });
+    </script>
+</div>
+</body>
+</html>
