@@ -32,5 +32,7 @@ func main() {
     router.GET("/command", decorate(apiCommand))
 
     log.Println("http server started on " + *httpAddr)
-    http.ListenAndServe(*httpAddr, router)
+    if err := http.ListenAndServe(*httpAddr, router); err != nil {
+        log.Fatalln(err)
+    }
 }

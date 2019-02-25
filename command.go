@@ -9,8 +9,8 @@ import (
     "time"
 )
 
-// 默认超时时间/秒
-const DEFAULT_TIMEOUT = time.Hour
+// 默认超时时间
+const DefaultTimeout = time.Minute * 10
 
 type ErrExecTimeout struct {
     Duration time.Duration
@@ -67,8 +67,8 @@ func (c *Command) RunInDirTimeout(dir string, timeout time.Duration) error {
     cmd.Stdout = c.stdout
     cmd.Stderr = c.stderr
 
-    if (timeout == -1) {
-        timeout = DEFAULT_TIMEOUT
+    if timeout == -1 {
+        timeout = DefaultTimeout
     }
     if err = cmd.Start(); err != nil {
         return err
