@@ -3,7 +3,7 @@ package main
 import "strings"
 
 type GitRepo struct {
-    path string
+    path    string
     lastCmd string
 }
 
@@ -59,6 +59,15 @@ func (r *GitRepo) Pull() (string, error) {
 
 func (r *GitRepo) Checkout(branch string) (string, error) {
     r.lastCmd = "git reset --hard HEAD && git checkout " + branch + " && git pull"
+    cmd := NewCommand(r.lastCmd)
+    if err := cmd.RunInDir(r.path); err != nil {
+        return "", err
+    }
+    return string(cmd.Stdout()), nil
+}
+
+func (r *GitRepo) Clean() (string, error) {
+    r.lastCmd = "git remote prune origin"
     cmd := NewCommand(r.lastCmd)
     if err := cmd.RunInDir(r.path); err != nil {
         return "", err

@@ -3,10 +3,10 @@ package main
 import (
     "bytes"
     "fmt"
+    "os"
     "os/exec"
     "syscall"
     "time"
-    "os"
 )
 
 // 默认超时时间/秒

@@ -1,31 +1,31 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>项目分支切换助手</title>
-    <link href="//apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
-    <link href="//apps.bdimg.com/libs/fontawesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>项目分支切换助手</title>
+	<link href="//apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+	<link href="//apps.bdimg.com/libs/fontawesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
 </head>
 <body style="background: #f0f0f0">
 <div class="container" style="background: #fff; margin-top: 20px;">
-    <h3>项目列表</h3>
-    <hr/>
-    <div class="form-horizontal" id="projects"></div>
-    <h3>执行命令</h3>
-    <hr/>
-    <div id="commands"></div>
-    <hr/>
-    <h5>控制台输出： </h5>
-    <div id="output"
-         style="width: 98%; height: 300px; padding: 5px; margin: 10px 0; border-radius:4px 4px 0 0; overflow: scroll; border: 1px solid #000; background: #3d3d3d; color: #f0f0f0"></div>
+	<h3>项目列表</h3>
+	<hr/>
+	<div class="form-horizontal" id="projects"></div>
+	<h3>执行命令</h3>
+	<hr/>
+	<div id="commands"></div>
+	<hr/>
+	<h5>控制台输出： </h5>
+	<div id="output"
+	     style="width: 98%; height: 300px; padding: 5px; margin: 10px 0; border-radius:4px 4px 0 0; overflow: scroll; border: 1px solid #000; background: #3d3d3d; color: #f0f0f0"></div>
 
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="//apps.bdimg.com/libs/jquery/1.11.3/jquery.min.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="//apps.bdimg.com/libs/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-    <script>
+	<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+	<script src="//apps.bdimg.com/libs/jquery/1.11.3/jquery.min.js"></script>
+	<!-- Include all compiled plugins (below), or include individual files as needed -->
+	<script src="//apps.bdimg.com/libs/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+	<script>
         $(function () {
             var projects, commands;
             $.getJSON('/status', function (out) {
@@ -43,9 +43,10 @@
                     }
                     html += '</select>';
                     html += '</div>';
-                    html += '<div class="col-sm-3">' +
+                    html += '<div class="col-sm-4">' +
                         '<button data-project="' + info.name + '" data-action="pull" class="btn btn-primary">更新代码</button> &nbsp;' +
-                        '<button data-project="' + info.name + '" data-action="checkout" class="btn btn-success">切换分支</button>' +
+                        '<button data-project="' + info.name + '" data-action="checkout" class="btn btn-success">切换分支</button> &nbsp;' +
+                        '<button data-project="' + info.name + '" data-action="clean" class="btn btn-warning">清理无效分支</button>' +
                         '</div>';
                     html += '</div>';
 
@@ -57,6 +58,7 @@
                 }
                 bind_events();
             });
+
             function bind_events() {
                 $('button').unbind('click');
                 $('button').click(function () {
@@ -75,6 +77,10 @@
                             var branch = $('#project-' + project).find('select[name="branch"]').val();
                             url = "/checkout?p=" + project + "&branch=" + branch;
                             cmd = "git checkout " + branch;
+                            break;
+                        case 'clean':
+                            url = "/clean?p=" + project;
+                            cmd = "git remote prune origin";
                             break;
                         default: // command
                             cmd = commands[action];
@@ -104,7 +110,7 @@
                 });
             }
         });
-    </script>
+	</script>
 </div>
 </body>
 </html>

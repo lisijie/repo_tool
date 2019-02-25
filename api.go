@@ -1,11 +1,11 @@
 package main
 
 import (
-    "github.com/julienschmidt/httprouter"
     "encoding/json"
-    "fmt"
-    "net/http"
     "errors"
+    "fmt"
+    "github.com/julienschmidt/httprouter"
+    "net/http"
 )
 
 type APIHandler func(http.ResponseWriter, *http.Request, httprouter.Params) (interface{}, error)
@@ -36,8 +36,10 @@ func apiStatus(w http.ResponseWriter, r *http.Request, p httprouter.Params) (int
         commands = config.GetSection("commands").GetAll()
     }
     out := map[string]interface{}{
-        "projects": projects,
-        "commands": commands,
+        "projects":   projects,
+        "commands":   commands,
+        "version":    Version,
+        "build_time": BuildTime,
     }
     return out, nil
 }
@@ -81,12 +83,27 @@ func apiCheckout(w http.ResponseWriter, r *http.Request, p httprouter.Params) (i
     return out, nil
 }
 
+// 清理无效追踪分支
+func apiClean(w http.ResponseWriter, r *http.Request, p httprouter.Params) (interface{}, error) {
+    project := r.URL.Query().Get("p")
+    path := config.GetSection("projects").GetString(project)
+    repo := NewGitRepo(path)
+    ret, err := repo.Clean()
+    if err != nil {
+        return "", nil
+    }
+    out := make(map[string]interface{})
+    out["cmd"] = repo.LastCmd()
+    out["out"] = ret
+    return out, nil
+}
+
 // 执行命令
 func apiCommand(w http.ResponseWriter, r *http.Request, p httprouter.Params) (interface{}, error) {
     name := r.URL.Query().Get("name")
     commands := config.GetSection("commands")
     if commands == nil || commands.GetString(name) == "" {
-        return nil, errors.New("command not found.")
+        return nil, errors.New("command not found")
     }
     cmdStr := commands.GetString(name)
     cmd := NewCommand(cmdStr)
